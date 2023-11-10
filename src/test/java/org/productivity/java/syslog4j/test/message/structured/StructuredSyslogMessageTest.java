@@ -33,6 +33,7 @@ package org.productivity.java.syslog4j.test.message.structured;
 //
 // Date: Jul 15, 2009
 // ---------------------
+// Nov. 10. 2023 serialize is different from toString
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,15 +42,16 @@ import junit.framework.TestCase;
 
 import org.productivity.java.syslog4j.impl.message.structured.StructuredSyslogMessage;
 
-public class StructuredSyslogMessageTest extends TestCase
-{
+public class StructuredSyslogMessageTest extends TestCase {
+	
    public void testFromString1()
    {
       final String messageStr = "procId msgId1 - " + StructuredSyslogMessage.BOM + "my message!!";
 
       final StructuredSyslogMessage message = StructuredSyslogMessage.fromString(messageStr);
       
-      assertEquals(messageStr, message.toString());
+      assertEquals(messageStr, message.createMessage());
+      assertEquals("procId msgId1 - my message!!", message.toString());
 //      assertEquals(-108931075,message.hashCode());
       assertEquals(-1735213078,message.hashCode());
       

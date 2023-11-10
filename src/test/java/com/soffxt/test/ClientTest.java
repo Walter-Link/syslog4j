@@ -14,7 +14,7 @@ public class ClientTest {
 	public void testBOM () throws UnsupportedEncodingException {
 		StringBuilder builder = new StringBuilder();
 		builder.append(StructuredSyslogMessage.BOM);
-		builder.append("Ärger");
+		builder.append("Ã„rger");
 		String msgText = builder.toString();
 		byte[] bomBytes = msgText.getBytes("UTF-8");
 		// expect the byte sequence EF BB BF
@@ -22,7 +22,7 @@ public class ClientTest {
 		assertEquals(0xBB, bomBytes[1] & 0xFF);
 		assertEquals(0xBF, bomBytes[2] & 0xFF);
 		StructuredSyslogMessage msg = new StructuredSyslogMessage ("prcId", "mgId", null, msgText);
-		assertEquals("Ärger", msg.getMessage());
+		assertEquals("Ã„rger", msg.getMessage());
 		String serialized = msg.createMessage();
 		byte[] bytes = serialized.getBytes("UTF-8");
 		boolean found = false;

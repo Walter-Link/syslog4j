@@ -322,30 +322,8 @@ public class StructuredSyslogMessage extends AbstractSyslogMessage implements St
 		return serialize();
 	}
 
-	private String serialize() {
-		
-		if (!StructuredSyslogMessage.checkIsPrintable(getProcessId())) // WL
-			throw new IllegalArgumentException("Invalid process id: " + getProcessId());
-		
-		if (!StructuredSyslogMessage.checkIsPrintable(getMessageId()))
-			throw new IllegalArgumentException("Invalid message id: " + getMessageId());
-
-		final StringBuffer sb = new StringBuffer();
-
-		sb.append(StructuredSyslogMessage.nilProtect(getProcessId())); // WL moved processId to StructuredSyslogMessage
-		sb.append(' ');
-
-		sb.append(StructuredSyslogMessage.nilProtect(getMessageId()));
-		sb.append(' ');
-
+	private void serializeStructuredData(StringBuilder sb) {
 		if (getStructuredData() == null || getStructuredData().size() == 0) {
-		/*
-			// This is not desired, but rsyslogd does not store version 1 syslog
-			// message correctly if
-			// there is no
-			// structured data present
-			sb.append(SyslogConstants.STRUCTURED_DATA_EMPTY_VALUE);
-		 */
 //			WL: according to RFC 5424 we should write - if no structured data is present 
 			sb.append(SyslogConstants.STRUCTURED_DATA_NILVALUE);
 		} 
@@ -353,9 +331,6 @@ public class StructuredSyslogMessage extends AbstractSyslogMessage implements St
 			
 			for (Map.Entry<String,Map<String,String>> sdElement: getStructuredData().entrySet()) {
 				
-//			Set sdEntrySet = getStructuredData().entrySet();
-//			for (Iterator it = sdEntrySet.iterator(); it.hasNext();) {
-//				final Map.Entry sdElement = (Map.Entry) it.next();
 				final String sdId = (String) sdElement.getKey();
 
 				if (sdId == null || sdId.length() == 0
@@ -370,9 +345,6 @@ public class StructuredSyslogMessage extends AbstractSyslogMessage implements St
 				if (sdParams != null) {
 					
 					for (Map.Entry<String,String> entry: sdParams.entrySet()) {
-//					Set entrySet = sdParams.entrySet();
-//					for (Iterator it2 = entrySet.iterator(); it2.hasNext();) {
-//						Map.Entry entry = (Map.Entry) it2.next();
 						final String paramName = entry.getKey();
 						final String paramValue = entry.getValue();
 
@@ -398,7 +370,27 @@ public class StructuredSyslogMessage extends AbstractSyslogMessage implements St
 				sb.append(']');
 			}
 		}
+	}
+	
+	private String serialize() {
+		
+		if (!StructuredSyslogMessage.checkIsPrintable(getProcessId())) // WL
+			throw new IllegalArgumentException("Invalid process id: " + getProcessId());
+		
+		if (!StructuredSyslogMessage.checkIsPrintable(getMessageId()))
+			throw new IllegalArgumentException("Invalid message id: " + getMessageId());
 
+		StringBuilder sb = new StringBuilder();
+
+		// WL moved processId to StructuredSyslogMessage
+		sb.append(StructuredSyslogMessage.nilProtect(getProcessId())); 
+		sb.append(' ');
+
+		sb.append(StructuredSyslogMessage.nilProtect(getMessageId()));
+		sb.append(' ');
+
+		serializeStructuredData(sb);
+		
 		if (getMessage() != null && getMessage().length() != 0) {
 			sb.append(' ');
 			sb.append(BOM); // WL
@@ -406,10 +398,9 @@ public class StructuredSyslogMessage extends AbstractSyslogMessage implements St
 		}
 
 		return sb.toString();
-
 	}
 
-	public static void sdEscape(final StringBuffer sb, final String value) {
+	private static void sdEscape(final StringBuilder sb, final String value) {
 		for (int i = 0; i < value.length(); i++) {
 			final char c = value.charAt(i);
 
@@ -487,6 +478,22 @@ public class StructuredSyslogMessage extends AbstractSyslogMessage implements St
 	}
 
 	public String toString() {
-		return serialize();
+		StringBuilder sb = new StringBuilder();
+
+		// WL moved processId to StructuredSyslogMessage
+		sb.append(StructuredSyslogMessage.nilProtect(getProcessId())); 
+		sb.append(' ');
+
+		sb.append(StructuredSyslogMessage.nilProtect(getMessageId()));
+		sb.append(' ');
+
+		serializeStructuredData(sb);
+		
+		if (getMessage() != null && getMessage().length() != 0) {
+			sb.append(' ');
+			sb.append(getMessage());
+		}
+
+		return sb.toString();
 	}
 }
