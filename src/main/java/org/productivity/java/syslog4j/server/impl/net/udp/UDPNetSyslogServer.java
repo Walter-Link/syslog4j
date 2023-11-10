@@ -6,11 +6,11 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 
 import org.productivity.java.syslog4j.SyslogRuntimeException;
 import org.productivity.java.syslog4j.server.SyslogServerEventIF;
 import org.productivity.java.syslog4j.server.impl.AbstractSyslogServer;
+import org.productivity.java.syslog4j.server.impl.event.structured.StructuredSyslogServerEvent;
 import org.productivity.java.syslog4j.util.SyslogUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,13 +93,19 @@ public class UDPNetSyslogServer extends AbstractSyslogServer {
 				// Create a new byte array without null values
 				byte[] data = dp.getData();
 				int length = dp.getLength();
+				
+				SyslogServerEventIF event = createEvent(this.getConfig(),data,length,dp.getAddress());
 
 				if (logger.isDebugEnabled()) {
-					String receiveData_Str = new String(data, 0, length, StandardCharsets.UTF_8);
-					logger.debug("Read receiveData: {}", receiveData_Str); //ORC-8935
+					if (event instanceof StructuredSyslogServerEvent) {
+						String receiveData_Str = ((StructuredSyslogServerEvent)event).getStructuredMessage().toString();
+						logger.debug("Read receiveData: {}", receiveData_Str); //ORC-8935
+					}
+					else {
+						String receiveData_Str = SyslogUtility.newString(this.getConfig(), data);
+						logger.debug("Read receiveData: {}", receiveData_Str); //ORC-8935
+					}
 				}
-				
-				SyslogServerEventIF event = createEvent(this.getConfig(),receiveData,length,dp.getAddress());
 
 				handleEvent(null,this,dp,event);
 

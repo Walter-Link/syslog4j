@@ -16,6 +16,7 @@ import org.productivity.java.syslog4j.SyslogRuntimeException;
 import org.productivity.java.syslog4j.server.SyslogServerEventIF;
 import org.productivity.java.syslog4j.server.SyslogServerIF;
 import org.productivity.java.syslog4j.server.impl.AbstractSyslogServer;
+import org.productivity.java.syslog4j.server.impl.event.structured.StructuredSyslogServerEvent;
 import org.productivity.java.syslog4j.util.SyslogUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,9 +127,18 @@ public class TCPNetSyslogServer extends AbstractSyslogServer {
 				}
 				
 				while (line != null && line.length() != 0) {
-					logger.debug("Read line: {}", line);
 					SyslogServerEventIF event = createEvent(this.server.getConfig(),line,this.socket.getInetAddress());
 					
+					if (logger.isDebugEnabled()) {
+						if (event instanceof StructuredSyslogServerEvent) {
+							String receiveData_Str = ((StructuredSyslogServerEvent)event).getStructuredMessage().toString();
+							logger.debug("Read receiveData: {}", receiveData_Str); //ORC-8935
+						}
+						else {
+							logger.debug("Read receiveData: {}", line);
+						}
+					}
+
 					AbstractSyslogServer.handleEvent(this.sessions,this.server,this.socket,event);
 
 					line = readLine(); // WL: br.readLine();
